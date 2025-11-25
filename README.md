@@ -108,8 +108,9 @@ In your new Firebase project's console:
     firebase init hosting
     ```
     *   Select **"Use an existing project"** and choose the Firebase project you created.
-    *   When asked for your public directory, enter `.next`. **This is incorrect for modern Next.js App Router with output exports. The correct directory is `out`.** First, you'll need to configure your `next.config.ts` to output static files by adding `output: 'export'`. Then run `npm run build` which will generate an `out` directory. When initializing hosting, specify `out` as the public directory.
+    *   When asked for your public directory, enter **`out`**. This is critical.
     *   Configure as a single-page app (rewrite all URLs to /index.html)? **Yes**.
+    *   Set up automatic builds and deploys with GitHub? **No** (You can set this up later if you wish).
 
 4.  Build your Next.js app for production:
     ```bash
