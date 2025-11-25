@@ -1,0 +1,20 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if the user is the admin
+    function isAdmin() {
+      // TODO: Replace with your actual admin email address
+      return request.auth.token.email == "admin@example.com";
+    }
+
+    // The 'teams' collection
+    match /teams/{teamId} {
+      // Anyone can read the leaderboard data
+      allow read: if true;
+
+      // Only the admin can create, update, or delete team data
+      allow write: if isAdmin();
+    }
+  }
+}
