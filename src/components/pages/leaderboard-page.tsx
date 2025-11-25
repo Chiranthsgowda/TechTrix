@@ -12,7 +12,7 @@ import { LoginModal } from '@/components/admin/login-modal';
 import { ResetDialog } from '@/components/admin/reset-dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { LogIn, LogOut, UserCog, LoaderCircle } from 'lucide-react';
+import { LogIn, LogOut, UserCog, LoaderCircle, AlertTriangle } from 'lucide-react';
 
 export function LeaderboardPage() {
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -21,8 +21,19 @@ export function LeaderboardPage() {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const { toast } = useToast();
+  const [firebaseReady, setFirebaseReady] = useState(false);
 
   useEffect(() => {
+    if (auth && firestore) {
+      setFirebaseReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!firebaseReady) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const teamsCollection = collection(firestore, 'teams');
     const q = query(teamsCollection);
@@ -45,7 +56,7 @@ export function LeaderboardPage() {
     });
 
     return () => unsubscribe();
-  }, [toast]);
+  }, [toast, firebaseReady]);
 
   const sortedTeams = useMemo(() => {
     return [...teams].sort((a, b) => {
@@ -65,6 +76,7 @@ export function LeaderboardPage() {
   }, [teams]);
 
   const handleLogin = useCallback(async (email, password) => {
+    if (!auth) return;
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({
@@ -84,6 +96,7 @@ export function LeaderboardPage() {
   }, [toast]);
 
   const handleLogout = useCallback(async () => {
+    if (!auth) return;
     await signOut(auth);
     toast({
       title: 'Logged Out',
@@ -92,6 +105,7 @@ export function LeaderboardPage() {
   }, [toast]);
 
   const handleAddTeam = useCallback(async (teamName: string, collegeName: string) => {
+    if (!firestore) return;
     try {
       await addDoc(collection(firestore, 'teams'), {
         teamName,
@@ -118,6 +132,7 @@ export function LeaderboardPage() {
   }, [toast]);
 
   const handleScoreUpdate = useCallback(async (teamId: string, field: keyof Team, value: number | null) => {
+    if (!firestore) return;
     const teamDocRef = doc(firestore, 'teams', teamId);
     try {
       const teamToUpdate = teams.find(t => t.id === teamId);
@@ -144,6 +159,7 @@ export function LeaderboardPage() {
   }, [teams, toast]);
   
   const handleReset = useCallback(async () => {
+    if (!firestore) return;
     try {
       const teamsCollection = collection(firestore, 'teams');
       const querySnapshot = await getDocs(teamsCollection);
@@ -166,6 +182,20 @@ export function LeaderboardPage() {
     }
   }, [toast]);
 
+
+  if (!firebaseReady && !loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col items-center justify-center h-96 bg-card border border-destructive/50 rounded-lg p-8 text-center">
+            <AlertTriangle className="h-16 w-16 text-destructive mb-4" />
+            <h2 className="text-2xl font-bold text-destructive mb-2">Firebase Not Configured</h2>
+            <p className="text-muted-foreground max-w-md">
+                The application cannot connect to Firebase. Please ensure your <code>.env.local</code> file is present and contains the correct Firebase project configuration. The app will not function correctly without it.
+            </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>

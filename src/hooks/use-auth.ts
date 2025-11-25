@@ -13,6 +13,10 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+        setLoading(false);
+        return;
+    }
     if (!ADMIN_EMAIL) {
         console.warn("NEXT_PUBLIC_ADMIN_EMAIL environment variable not set.");
     }
