@@ -26,12 +26,13 @@ export function LeaderboardPage() {
   useEffect(() => {
     if (auth && firestore) {
       setFirebaseReady(true);
+    } else {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     if (!firebaseReady) {
-      setLoading(false);
       return;
     }
     setLoading(true);
@@ -60,17 +61,20 @@ export function LeaderboardPage() {
 
   const sortedTeams = useMemo(() => {
     return [...teams].sort((a, b) => {
-      if (b.total !== a.total) {
-        return b.total - a.total;
-      }
+      // Primary sort by total score (descending)
+      const totalDiff = (b.total || 0) - (a.total || 0);
+      if (totalDiff !== 0) return totalDiff;
+  
+      // Secondary sort by manualRank (ascending, nulls last)
       const aRank = a.manualRank ?? Infinity;
       const bRank = b.manualRank ?? Infinity;
-      if (aRank !== bRank) {
-        return aRank - bRank;
-      }
+      if (aRank !== bRank) return aRank - bRank;
+  
+      // Tertiary sort by creation time (ascending)
       if (a.createdAt && b.createdAt) {
         return a.createdAt.toMillis() - b.createdAt.toMillis();
       }
+      
       return 0;
     });
   }, [teams]);
@@ -144,7 +148,7 @@ export function LeaderboardPage() {
         const r1 = field === 'round1' ? (value ?? 0) : teamToUpdate.round1;
         const r2 = field === 'round2' ? (value ?? 0) : teamToUpdate.round2;
         const r3 = field === 'round3' ? (value ?? 0) : teamToUpdate.round3;
-        updatedData.total = r1 + r2 + r3;
+        updatedData.total = (r1 || 0) + (r2 || 0) + (r3 || 0);
       }
 
       await updateDoc(teamDocRef, updatedData);
@@ -183,14 +187,14 @@ export function LeaderboardPage() {
   }, [toast]);
 
 
-  if (!firebaseReady && !loading) {
+  if (!firebaseReady) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col items-center justify-center h-96 bg-card border border-destructive/50 rounded-lg p-8 text-center">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)] bg-card border border-destructive/50 rounded-lg p-8 text-center">
             <AlertTriangle className="h-16 w-16 text-destructive mb-4" />
             <h2 className="text-2xl font-bold text-destructive mb-2">Firebase Not Configured</h2>
             <p className="text-muted-foreground max-w-md">
-                The application cannot connect to Firebase. Please ensure your <code>.env.local</code> file is present and contains the correct Firebase project configuration. The app will not function correctly without it.
+                The application cannot connect to Firebase. Please ensure your <code>.env.local</code> file is present and contains the correct Firebase project configuration. Refer to the <code>README.md</code> for setup instructions.
             </p>
         </div>
       </div>
