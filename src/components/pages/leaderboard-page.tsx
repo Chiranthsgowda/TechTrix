@@ -231,7 +231,7 @@ export function LeaderboardPage() {
         <main>
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-6xl font-bold font-headline tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-slate-200 via-primary to-accent">
-              TechTrix Leaderboard
+              Leaderboard
             </h2>
             <p className="mt-4 text-lg md:text-xl text-muted-foreground">
               Journey through code, clues, and creativity.
